@@ -18,6 +18,8 @@ sub update {
     return $dist{$pkg} = $data;
 }
 
+sub cleanup { %dist = () }
+
 package CPANMetaDB::Dist::Updater;
 use AnyEvent;
 use AnyEvent::HTTP;
@@ -86,6 +88,7 @@ sub update_packages {
 
     my $in_body;
     my $count = 0;
+    CPANMetaDB::Dist->cleanup();
     while (<$z>) {
         chomp;
         /^Last-Updated: (.*)/
