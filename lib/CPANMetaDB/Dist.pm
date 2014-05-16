@@ -18,7 +18,10 @@ sub update {
     return $dist{$pkg} = $data;
 }
 
-sub cleanup { %dist = () }
+sub replace_dist {
+    my($class, $new_dist) = @_;
+    %dist = %$new_dist;
+}
 
 package CPANMetaDB::Dist::Updater;
 use AnyEvent;
@@ -88,7 +91,7 @@ sub update_packages {
 
     my $in_body;
     my $count = 0;
-    CPANMetaDB::Dist->cleanup();
+    my %dist;
     while (<$z>) {
         chomp;
         /^Last-Updated: (.*)/
@@ -99,9 +102,11 @@ sub update_packages {
         } elsif ($in_body) {
             $count++;
             my($pkg, $version, $path) = split /\s+/, $_, 3;
-            CPANMetaDB::Dist->update($pkg, [ $version, $path ]);
+            $dist{$pkg} = CPANMetaDB::Dist->update($pkg, [ $version, $path ]);
         }
     }
+
+    CPANMetaDB::Dist->replace_dist({%dist});
 
     warn "----> Complete! Updated $count packages\n";
 
